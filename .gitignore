@@ -1,2 +1,5 @@
 config_bot.py
+config_bot.pyc
 posts_replied_to.txt
+.vagrant/
+Vagrantfile

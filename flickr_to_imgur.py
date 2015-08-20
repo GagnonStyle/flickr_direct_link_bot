@@ -1,7 +1,6 @@
 #!/usr/local/bin/python
 import flickr_api
 from flickr_api.api import flickr
-from imgurpython import ImgurClient
 import xml.etree.ElementTree as ET
 from urlparse import urlparse
 import praw
@@ -10,14 +9,13 @@ import re
 import os
 from config_bot import *
 
-# Setup imgur api
-imgur_client = ImgurClient(IMGUR_CLIENT_ID, IMGUR_CLIENT_SECRET)
 # Setup flickr api
 flickr_api.set_keys(api_key = FLICKR_API_KEY, api_secret = FLICKR_API_SECRET)
 # Create the Reddit instance
 user_agent = ("flickr_to_imgur 0.1")
 r = praw.Reddit(user_agent=user_agent)
 r.login(REDDIT_USERNAME, REDDIT_PASS, disable_warning=True)
+subreddit = r.get_subreddit('lego')
 
 # Have we run this code before? If not, create an empty list
 if not os.path.isfile("posts_replied_to.txt"):
@@ -31,8 +29,19 @@ else:
         posts_replied_to = posts_replied_to.split("\n")
         posts_replied_to = filter(None, posts_replied_to)
 
-subreddit = r.get_subreddit('lego')
-for submission in subreddit.get_new(limit=7):
+for post_id in posts_replied_to:
+    post = r.get_submission(submission_id=post_id)
+    comments = post.comments
+    for c in comments:
+        if c.author != None and c.author.name == 'FlickrToImgurBot' and c.body.startswith('###[Direct Photo Link]') and c.replies:
+            for reply in c.replies:
+                if 'remove' in reply.body.lower() and reply.author.name == post.author.name:
+                    print 'Found a link to remove, deleting...'
+                    c.delete()
+                    break
+
+
+for submission in subreddit.get_new(limit=10):
     # If we haven't replied to this post before
     if submission.id not in posts_replied_to:
 
@@ -44,23 +53,25 @@ for submission in subreddit.get_new(limit=7):
 
             # Get all the sizes of the flickr photo
             print 'Getting image from Flickr...'
-            sizes_xml = flickr.photos.getSizes(photo_id = photo_id)
-            # Last == Biggest, (But sometimes biggest is too big for imgur)
-            sizes = ET.fromstring(sizes_xml).findall('sizes/size')
-            if sizes[-1].get('label') == 'Original':
-                biggest_size = sizes[-2]
-            else:
+            info = flickr.photos.getInfo(photo_id = photo_id)
+            if ET.fromstring(info).findall('photo/usage')[0].get('candownload') == '1':
+                sizes_xml = flickr.photos.getSizes(photo_id = photo_id)
+                # Last == Biggest
+                sizes = ET.fromstring(sizes_xml).findall('sizes/size')
                 biggest_size = sizes[-1]
-            image_url = biggest_size.get('source')
 
-            print 'Uploading to Imgur...'
-            uploaded = imgur_client.upload_from_url(image_url, config=None, anon=True)
-            print 'Uploaded!'
+                image_url = biggest_size.get('source')
 
-            print 'Posting Comment...'
-            submission.add_comment('[Imgur Mirror](' + uploaded['link'] + ')')
-            posts_replied_to.append(submission.id)
-            print 'Comment Posted!'
+                print 'Posting Comment...'
+
+                submission.add_comment('###[Direct Photo Link](' + image_url + ')\n' +
+                                       '^(Are you OP? Would you like this comment removed? Just comment \'remove\' and the bot will trash it the next time it runs!) ' +
+                                       '^(Suggestions to make the bot better? Send me a PM! Also, don\'t be fooled, I\'m not really rehosting to imgur, just posting the deep link to the image without html.)')
+
+                posts_replied_to.append(submission.id)
+                print 'Comment Posted!'
+            else:
+                print 'Can\'t rehost this photo! (copyright stuff...)'
 
 # Write our updated list back to the file
 with open("posts_replied_to.txt", "w") as f:
