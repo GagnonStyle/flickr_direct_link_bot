@@ -16,7 +16,7 @@ flickr_api.set_keys(api_key = FLICKR_API_KEY, api_secret = FLICKR_API_SECRET)
 user_agent = ("flickr_to_imgur 0.1")
 r = praw.Reddit(user_agent=user_agent)
 r.login(REDDIT_USERNAME, REDDIT_PASS, disable_warning=True)
-subreddit = r.get_subreddit('pythonforengineers')
+subreddit = r.get_subreddit(SUBREDDIT_NAME)
 
 # Have we run this code before? If not, create an empty list
 if not os.path.isfile("posts_replied_to.txt"):
