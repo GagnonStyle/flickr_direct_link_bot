@@ -1,4 +1,5 @@
 #!/usr/local/bin/python
+# -*- coding: utf-8 -*-
 import flickr_api
 from flickr_api.api import flickr
 import xml.etree.ElementTree as ET
@@ -15,7 +16,7 @@ flickr_api.set_keys(api_key = FLICKR_API_KEY, api_secret = FLICKR_API_SECRET)
 user_agent = ("flickr_to_imgur 0.1")
 r = praw.Reddit(user_agent=user_agent)
 r.login(REDDIT_USERNAME, REDDIT_PASS, disable_warning=True)
-subreddit = r.get_subreddit('lego')
+subreddit = r.get_subreddit('pythonforengineers')
 
 # Have we run this code before? If not, create an empty list
 if not os.path.isfile("posts_replied_to.txt"):
@@ -65,9 +66,11 @@ for submission in subreddit.get_new(limit=10):
                 print 'Posting Comment...'
 
                 submission.add_comment('###[Direct Photo Link](' + image_url + ')\n' +
-                                       '^(Are you OP? Would you like this comment removed? Just comment \'remove\' and the bot will trash it the next time it runs!) ' +
-                                       '^(Suggestions to make the bot better? Send me a PM! Also, don\'t be fooled, I\'m not really rehosting to imgur, just posting the deep link to the image without html.)')
-
+                                       '*****\n' +
+                                       '^^Are you OP? Would you like this link removed?\n' +
+                                       '^^Just comment \'remove\' and the bot will trash it the next time it runs!\n' +
+                                       '^^This bot uses the flickr API to get a direct link to the posted photo.\n' +
+                                       '^^It does not rehost or mirror the image in any way. Check out the source code on [GitHub](https://github.com/GagnonStyle/flickr_to_imgur)')
                 posts_replied_to.append(submission.id)
                 print 'Comment Posted!'
             else:
