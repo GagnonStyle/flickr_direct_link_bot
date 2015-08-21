@@ -50,32 +50,36 @@ for submission in subreddit.get_new(limit=10):
         if link_url.netloc == 'www.flickr.com':
             print 'Found a new Flickr post!'
             #regex out the photo id, so we can use it in the flickr API
-            photo_id = re.search('photos/[^/]+/([0-9]+)', submission.url).group(1)
+            if re.search('photos/[^/]+/([0-9]+)', submission.url) != None:
+                photo_id = re.search('photos/[^/]+/([0-9]+)', submission.url).group(1)
 
-            # Get all the sizes of the flickr photo
-            print 'Getting image from Flickr...'
-            info = flickr.photos.getInfo(photo_id = photo_id)
-            if ET.fromstring(info).findall('photo/usage')[0].get('candownload') == '1':
-                sizes_xml = flickr.photos.getSizes(photo_id = photo_id)
-                # Last == Biggest
-                sizes = ET.fromstring(sizes_xml).findall('sizes/size')
-                biggest_size = sizes[-1]
+                # Get all the sizes of the flickr photo
+                print 'Getting image from Flickr...'
+                info = flickr.photos.getInfo(photo_id = photo_id)
+                if ET.fromstring(info).findall('photo/usage')[0].get('candownload') == '1':
+                    sizes_xml = flickr.photos.getSizes(photo_id = photo_id)
+                    # Last == Biggest
+                    sizes = ET.fromstring(sizes_xml).findall('sizes/size')
+                    biggest_size = sizes[-1]
 
-                image_url = biggest_size.get('source')
+                    image_url = biggest_size.get('source')
 
-                print 'Posting Comment...'
+                    print 'Posting Comment...'
 
-                submission.add_comment('###[Direct Photo Link](' + image_url + ')\n' +
-                                       '*****\n' +
-                                       '^^Are you OP? Would you like this link removed?\n' +
-                                       '^^Just comment \'remove\' and the bot will trash it the next time it runs!\n' +
-                                       '^^This bot uses the flickr API to get a direct link to the posted photo.\n' +
-                                       '^^It does not rehost or mirror the image in any way. Check out the source code on [GitHub](https://github.com/GagnonStyle/flickr_to_imgur)')
-                posts_replied_to.append(submission.id)
-                print 'Comment Posted!'
+                    submission.add_comment('###[Direct Photo Link](' + image_url + ')\n' +
+                                           '*****\n' +
+                                           '^^Are you OP? Would you like this link removed?\n' +
+                                           '^^Just comment \'remove\' and the bot will trash it the next time it runs!\n' +
+                                           '^^This bot uses the flickr API to get a direct link to the posted photo.\n' +
+                                           '^^It does not rehost or mirror the image in any way. Check out the source code on [GitHub](https://github.com/GagnonStyle/flickr_to_imgur)')
+                    posts_replied_to.append(submission.id)
+                    print 'Comment Posted!'
+                else:
+                    print 'Can\'t rehost this photo! (copyright stuff...)'
             else:
-                print 'Can\'t rehost this photo! (copyright stuff...)'
+                print 'The post was an album, too bad!'
 
+print ''
 # Write our updated list back to the file
 with open("posts_replied_to.txt", "w") as f:
     for post_id in posts_replied_to:
