@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import praw
 import re
+import urllib
 from urlparse import urlparse
 import xml.etree.ElementTree as ET
 from flickr_api.api import flickr
