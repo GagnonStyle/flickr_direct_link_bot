@@ -12,7 +12,7 @@ import time
 from config_bot import *
 from bot import *
 
-print '======' + time.strftime("%H:%M:%S") + '======'
+print '====== Started: ' + time.strftime("%H:%M:%S") + '======'
 # Setup flickr api
 flickr_api.set_keys(api_key = FLICKR_API_KEY, api_secret = FLICKR_API_SECRET)
 # Create the Reddit instance
@@ -33,30 +33,6 @@ else:
         posts_replied_to = posts_replied_to.split("\n")
         posts_replied_to = filter(None, posts_replied_to)
 
-print 'Looking for comments to remove or fix.'   
-for post_id in posts_replied_to:
-    post = reddit.get_submission(submission_id=post_id)
-
-    comments = post.comments
-    for c in comments:
-        if c.author != None and c.author.name == REDDIT_USERNAME and c.body.startswith('###[Direct Photo Link]') and c.replies:
-            for reply in c.replies:
-                if 'remove' in reply.body.lower() and reply.author.name == post.author.name:
-                    print 'Found a link to remove, deleting...'
-                    c.delete()
-                    break
-            break
-        #check if previous link still works
-        regex = re.match('###\[Direct Photo Link\]\((.*)\)', c.body)
-        if regex != None:
-            prev_link = regex.group(1)
-            response = requests.head(prev_link)
-            if response.status_code != 200:
-                print 'Broken link, editing to fix...'
-                #if the link is broken, edit it with a good link!
-                edit_comment(submission=post, comment=c)
-print 'Done looking.'
-print ''
 for sub_name in subreddits:
     print 'Looking for new flickr posts in /r/' + sub_name
     sub = reddit.get_subreddit(sub_name)
@@ -78,4 +54,4 @@ print 'Done!'
 with open("posts_replied_to.txt", "w") as f:
     for post_id in posts_replied_to:
         f.write(post_id + "\n")
-print '==========='
+print '====== Finished: ' + time.strftime("%H:%M:%S") + '======'
