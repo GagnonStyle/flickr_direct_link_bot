@@ -52,6 +52,6 @@ for sub_name in subreddits:
 print 'Done!'
 # Write our updated list back to the file
 with open("posts_replied_to.txt", "w") as f:
-    for post_id in posts_replied_to:
+    for post_id in posts_replied_to[-75:]:
         f.write(post_id + "\n")
 print '====== Finished: ' + time.strftime("%H:%M:%S") + '======'
